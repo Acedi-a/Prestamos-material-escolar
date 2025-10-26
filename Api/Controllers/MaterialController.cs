@@ -28,8 +28,7 @@ namespace Api.Controllers
  public async Task<IActionResult> GetAll()
  {
  var list = await _materiales.ListarTodosAsync();
- var result = list.Select(m => new { m.Id, m.NombreMaterial, m.CategoriaId, m.CantidadTotal, m.CantidadDisponible, m.Estado });
- return Ok(result);
+ return Ok(list);
  }
 
  // GET: api/Material/{id}
