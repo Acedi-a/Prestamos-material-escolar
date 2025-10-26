@@ -69,6 +69,7 @@ namespace Api
             builder.Services.AddScoped<CrearDocente>(); // ejemplo antiguo
             builder.Services.AddScoped<RegistrarDocente>();
             builder.Services.AddScoped<RegistrarMaterial>();
+            builder.Services.AddScoped<ActualizarMaterial>();
             builder.Services.AddScoped<SolicitarMaterial>();
             builder.Services.AddScoped<RegistrarPrestamo>();
             builder.Services.AddScoped<RegistrarDevolucion>();

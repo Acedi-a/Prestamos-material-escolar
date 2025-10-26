@@ -12,13 +12,15 @@ namespace Api.Controllers
  private readonly RegistrarMaterial _registrarMaterial;
  private readonly ActualizarEstadoMaterial _actualizarEstado;
  private readonly ConsultarDisponibilidadMaterial _consultarDisponibilidad;
+ private readonly ActualizarMaterial _actualizarMaterial;
 
- public MaterialController(IMaterialRepositorio materiales, RegistrarMaterial registrarMaterial, ActualizarEstadoMaterial actualizarEstado, ConsultarDisponibilidadMaterial consultarDisponibilidad)
+ public MaterialController(IMaterialRepositorio materiales, RegistrarMaterial registrarMaterial, ActualizarEstadoMaterial actualizarEstado, ConsultarDisponibilidadMaterial consultarDisponibilidad, ActualizarMaterial actualizarMaterial)
  {
  _materiales = materiales;
  _registrarMaterial = registrarMaterial;
  _actualizarEstado = actualizarEstado;
  _consultarDisponibilidad = consultarDisponibilidad;
+ _actualizarMaterial = actualizarMaterial;
  }
 
  // GET: api/Material
@@ -64,6 +66,23 @@ namespace Api.Controllers
  {
  await _actualizarEstado.EjecutarAsync(id, req.Estado);
  return Ok(new { message = "Estado actualizado" });
+ }
+
+ public record ActualizarMaterialRequest(int CategoriaId, string Nombre, string? Descripcion, int CantidadTotal, int CantidadDisponible, string Estado);
+
+ // PUT: api/Material/{id}
+ [HttpPut("{id:int}")]
+ public async Task<IActionResult> Update(int id, [FromBody] ActualizarMaterialRequest req)
+ {
+ try
+ {
+ await _actualizarMaterial.EjecutarAsync(id, req.CategoriaId, req.Nombre, req.Descripcion, req.CantidadTotal, req.CantidadDisponible, req.Estado);
+ return Ok(new { message = "Material actualizado" });
+ }
+ catch (ArgumentException ex)
+ {
+ return BadRequest(new { message = ex.Message });
+ }
  }
 
  // GET: api/Material/{id}/disponibilidad
