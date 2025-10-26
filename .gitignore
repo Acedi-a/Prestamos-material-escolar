@@ -1,0 +1,7 @@
+# Visual Studio
+.vs/
+.idea/
+
+# Build results
+bin/
+obj/
