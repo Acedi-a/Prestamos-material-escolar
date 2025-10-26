@@ -19,14 +19,34 @@ namespace Aplication.UseCases.Reparaciones
  {
  var material = await _materiales.ObtenerPorIdAsync(materialId) ?? throw new System.ArgumentException("Material no existe");
  if (cantidad <=0) throw new System.ArgumentException("La cantidad debe ser mayor a cero");
+ if (material.CantidadDisponible < cantidad) throw new System.InvalidOperationException("Stock disponible insuficiente para enviar a reparación");
 
- var reparacion = new HistorialReparacion { MaterialId = material.Id, FechaEnvio = fechaEnvio, DescripcionFalla = descripcionFalla, Costo = costo, Cantidad = cantidad };
+ // Registrar historial
+ var reparacion = new HistorialReparacion
+ {
+ MaterialId = material.Id,
+ FechaEnvio = fechaEnvio,
+ DescripcionFalla = descripcionFalla,
+ Costo = costo,
+ Cantidad = cantidad
+ };
  await _historial.CrearAsync(reparacion);
 
- material.Estado = "En Mantenimiento";
+
+ // Actualizar material: restar disponibilidad y marcar estado
+ material.CantidadDisponible -= cantidad;
+ //material.Estado = "En Mantenimiento";
  await _materiales.ActualizarAsync(material);
 
- await _movimientos.CrearAsync(new Movimiento { MaterialId = material.Id, TipoMovimiento = "Salida a Reparación", FechaMovimiento = System.DateTime.UtcNow, Cantidad = cantidad });
+
+ // Registrar movimiento
+ await _movimientos.CrearAsync(new Movimiento
+ {
+ MaterialId = material.Id,
+ TipoMovimiento = "Salida a Reparación",
+ FechaMovimiento = System.DateTime.UtcNow,
+ Cantidad = cantidad
+ });
 
  return reparacion.Id;
  }
