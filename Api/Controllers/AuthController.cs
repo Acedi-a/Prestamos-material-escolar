@@ -8,15 +8,16 @@ namespace Api.Controllers
  public class AuthController : ControllerBase
  {
  private readonly IUsuarioRepositorio _usuarios;
+ private readonly IRolRepositorio _roles;
  private readonly IJwtTokenService _jwt;
 
- public AuthController(IUsuarioRepositorio usuarios, IJwtTokenService jwt)
+ public AuthController(IUsuarioRepositorio usuarios, IRolRepositorio roles, IJwtTokenService jwt)
  {
- _usuarios = usuarios; _jwt = jwt;
+ _usuarios = usuarios; _roles = roles; _jwt = jwt;
  }
 
  public record LoginRequest(string NombreUsuarioOrEmail, string Password);
- public record LoginResponse(int UsuarioId, int RolId, string NombreUsuario, string Email, string Token);
+ public record LoginResponse(int UsuarioId, int RolId, string NombreRol, string NombreUsuario, string Email, string Token);
 
  // POST: api/Auth/login
  [HttpPost("login")]
@@ -30,8 +31,12 @@ namespace Api.Controllers
  if (user == null) return Unauthorized(new { message = "Usuario o contraseña inválidos" });
  // Comparación directa, ya que las contraseñas se almacenan en texto plano por ahora
  if (!string.Equals(user.Contrasena, req.Password)) return Unauthorized(new { message = "Usuario o contraseña inválidos" });
+
+ var rol = await _roles.ObtenerPorIdAsync(user.RolId);
+ var nombreRol = rol?.NombreRol ?? "Sin Rol";
+
  var token = _jwt.CreateToken(user);
- var res = new LoginResponse(user.Id, user.RolId, user.NombreUsuario, user.Email, token);
+ var res = new LoginResponse(user.Id, user.RolId, nombreRol, user.NombreUsuario, user.Email, token);
  return Ok(res);
  }
  }
