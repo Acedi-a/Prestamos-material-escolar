@@ -15,17 +15,18 @@ namespace Aplication.UseCases.Reparaciones
  _historial = historial; _materiales = materiales; _movimientos = movimientos;
  }
 
- public async Task<int> EjecutarAsync(int materialId, System.DateTime fechaEnvio, string descripcionFalla, decimal? costo)
+ public async Task<int> EjecutarAsync(int materialId, System.DateTime fechaEnvio, string descripcionFalla, decimal? costo, int cantidad)
  {
  var material = await _materiales.ObtenerPorIdAsync(materialId) ?? throw new System.ArgumentException("Material no existe");
+ if (cantidad <=0) throw new System.ArgumentException("La cantidad debe ser mayor a cero");
 
- var reparacion = new HistorialReparacion { MaterialId = material.Id, FechaEnvio = fechaEnvio, DescripcionFalla = descripcionFalla, Costo = costo };
+ var reparacion = new HistorialReparacion { MaterialId = material.Id, FechaEnvio = fechaEnvio, DescripcionFalla = descripcionFalla, Costo = costo, Cantidad = cantidad };
  await _historial.CrearAsync(reparacion);
 
  material.Estado = "En Mantenimiento";
  await _materiales.ActualizarAsync(material);
 
- await _movimientos.CrearAsync(new Movimiento { MaterialId = material.Id, TipoMovimiento = "Ajuste/Salida a Reparación", FechaMovimiento = System.DateTime.UtcNow, Cantidad =0 });
+ await _movimientos.CrearAsync(new Movimiento { MaterialId = material.Id, TipoMovimiento = "Salida a Reparación", FechaMovimiento = System.DateTime.UtcNow, Cantidad = cantidad });
 
  return reparacion.Id;
  }

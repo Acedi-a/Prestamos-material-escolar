@@ -69,7 +69,6 @@ namespace Api
             builder.Services.AddScoped<CrearDocente>(); // ejemplo antiguo
             builder.Services.AddScoped<RegistrarDocente>();
             builder.Services.AddScoped<RegistrarMaterial>();
-            builder.Services.AddScoped<ActualizarMaterial>();
             builder.Services.AddScoped<SolicitarMaterial>();
             builder.Services.AddScoped<RegistrarPrestamo>();
             builder.Services.AddScoped<RegistrarDevolucion>();
@@ -79,6 +78,9 @@ namespace Api
             builder.Services.AddScoped<NotificarDocenteMaterialNoDisponible>();
             builder.Services.AddScoped<RegistrarEnvioAReparacion>();
             builder.Services.AddScoped<ConsultarDisponibilidadMaterial>();
+            builder.Services.AddScoped<ConsultarHistorialReparaciones>();
+            builder.Services.AddScoped<ActualizarMaterial>();
+
 
             // Auth (JWT)
             var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-secret-key-please-change-0123456789"; // >=32 chars

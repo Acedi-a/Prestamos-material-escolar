@@ -4,25 +4,28 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Dominio.Entities
 {
- public class HistorialReparacion
- {
- [Key]
- public int Id { get; set; }
+     public class HistorialReparacion
+     {
+         [Key]
+         public int Id { get; set; }
  
- [Required]
- public int MaterialId { get; set; }
+         [Required]
+         public int MaterialId { get; set; }
  
- [ForeignKey(nameof(MaterialId))]
- public Material? Material { get; set; }
+         [ForeignKey(nameof(MaterialId))]
+         public Material? Material { get; set; }
  
- [Required]
- public DateTime FechaEnvio { get; set; }
+         [Required]
+         public DateTime FechaEnvio { get; set; }
  
- public DateTime? FechaRetorno { get; set; }
+         public DateTime? FechaRetorno { get; set; }
  
- [Required]
- public string DescripcionFalla { get; set; } = string.Empty;
+         [Required]
+         public string DescripcionFalla { get; set; } = string.Empty;
  
- public decimal? Costo { get; set; }
- }
+         public decimal? Costo { get; set; }
+ 
+         [Required]
+         public int Cantidad { get; set; }
+     }
 }
