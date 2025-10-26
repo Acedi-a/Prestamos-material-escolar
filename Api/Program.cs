@@ -13,6 +13,9 @@ using Infraestructura.Data;
 using Infraestructura.Repositorios;
 using Infraestructura.Servicios;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 
 namespace Api
 {
@@ -60,6 +63,7 @@ namespace Api
 
             // Servicios de infraestructura
             builder.Services.AddScoped<INotificacionServicio, NotificacionServicio>();
+            builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
             // Use Cases
             builder.Services.AddScoped<CrearDocente>(); // ejemplo antiguo
@@ -74,6 +78,21 @@ namespace Api
             builder.Services.AddScoped<NotificarDocenteMaterialNoDisponible>();
             builder.Services.AddScoped<RegistrarEnvioAReparacion>();
             builder.Services.AddScoped<ConsultarDisponibilidadMaterial>();
+
+            // Auth (JWT)
+            var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-secret-key-please-change-0123456789"; // >=32 chars
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = key
+                    };
+                });
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -98,7 +117,7 @@ namespace Api
             app.UseHttpsRedirection();
 
             app.UseCors("AllowAll");
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
