@@ -17,8 +17,14 @@ namespace Infraestructura.Repositorios
         {
             _context = context;
         }
+		public async Task<Docente?> ObtenerPorUsuarioIdAsync(int usuarioId)
+		{
+			return await _context.Docentes
+				.FirstOrDefaultAsync(d => d.UsuarioId == usuarioId);
+		}
 
-        public async Task<Docente?> ObtenerPorIdAsync(int id)
+
+		public async Task<Docente?> ObtenerPorIdAsync(int id)
         { 
             return await _context.Docentes.FindAsync(id);
         }

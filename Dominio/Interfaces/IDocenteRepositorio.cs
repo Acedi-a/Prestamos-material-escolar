@@ -11,6 +11,7 @@ namespace Dominio.Interfaces
         Task CrearAsync(Docente docente);
         Task ActualizarAsync(Docente docente);
         Task EliminarAsync(int id);
-    }
+		Task<Docente?> ObtenerPorUsuarioIdAsync(int usuarioId);
+	}
 
 }
