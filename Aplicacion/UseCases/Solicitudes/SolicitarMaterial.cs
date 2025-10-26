@@ -35,7 +35,9 @@ namespace Aplication.UseCases.Solicitudes
  {
  var material = await _materiales.ObtenerPorIdAsync(it.materialId) ?? throw new System.ArgumentException($"Material {it.materialId} no existe");
  if (it.cantidad <=0) throw new System.ArgumentException("Cantidad inválida");
- var det = new SolicitudDetalle { SolicitudId = solicitud.Id, MaterialId = material.Id, CantidadSolicitada = it.cantidad };
+ if (it.cantidad > material.CantidadDisponible)
+	throw new System.ArgumentException($"Stock insuficiente para '{material.NombreMaterial}'. Solicitados: {it.cantidad}, Disponibles: {material.CantidadDisponible}");
+var det = new SolicitudDetalle { SolicitudId = solicitud.Id, MaterialId = material.Id, CantidadSolicitada = it.cantidad };
  await _detalles.CrearAsync(det);
  }
 

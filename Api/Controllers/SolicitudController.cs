@@ -11,11 +11,12 @@ namespace Api.Controllers
  {
  private readonly ISolicitudRepositorio _solicitudes;
  private readonly ISolicitudDetalleRepositorio _detalles;
+ private readonly IMaterialRepositorio _materiales;
  private readonly SolicitarMaterial _solicitar;
 
- public SolicitudController(ISolicitudRepositorio solicitudes, ISolicitudDetalleRepositorio detalles, SolicitarMaterial solicitar)
+ public SolicitudController(ISolicitudRepositorio solicitudes, ISolicitudDetalleRepositorio detalles, IMaterialRepositorio materiales, SolicitarMaterial solicitar)
  {
- _solicitudes = solicitudes; _detalles = detalles; _solicitar = solicitar;
+ _solicitudes = solicitudes; _detalles = detalles; _solicitar = solicitar;  _materiales = materiales; ;
  }
 
  // GET: api/Solicitud
@@ -26,18 +27,47 @@ namespace Api.Controllers
  var result = list.Select(s => new { s.Id, s.DocenteId, s.EstadoSolicitud, s.FechaSolicitud });
  return Ok(result);
  }
+[HttpGet("PorDocente/{docenteId:int}")]
+        public async Task<IActionResult> GetByDocenteId(int docenteId)
+        {
+            // (Sería ideal tener 'ListarPorDocenteIdAsync' en el repositorio,
+            // pero por ahora filtramos la lista completa)
+            var todas = await _solicitudes.ListarTodosAsync();
+            var list = todas.Where(s => s.DocenteId == docenteId)
+                            .Select(s => new { s.Id, s.DocenteId, s.EstadoSolicitud, s.FechaSolicitud })
+                            .OrderByDescending(s => s.FechaSolicitud); // Ordenar por fecha
+            return Ok(list);
+        }
+		// GET: api/Solicitud/{id}
+		[HttpGet("{id:int}")]
+		public async Task<IActionResult> GetById(int id)
+		{
+			var s = await _solicitudes.ObtenerPorIdAsync(id);
+			if (s == null) return NotFound();
 
- // GET: api/Solicitud/{id}
- [HttpGet("{id:int}")]
- public async Task<IActionResult> GetById(int id)
- {
- var s = await _solicitudes.ObtenerPorIdAsync(id);
- if (s == null) return NotFound();
- var detalles = (await _detalles.ListarTodosAsync()).Where(d => d.SolicitudId == s.Id).Select(d => new { d.Id, d.MaterialId, d.CantidadSolicitada });
- return Ok(new { s.Id, s.DocenteId, s.EstadoSolicitud, s.FechaSolicitud, Detalles = detalles });
- }
+			// Esto es ineficiente (N+1), pero sigue tu patrón actual.
+			// (Si tu 'ISolicitudDetalleRepositorio' tiene un 'ListarPorSolicitudIdAsync(id)', úsalo)
+			var detallesDb = (await _detalles.ListarTodosAsync()).Where(d => d.SolicitudId == s.Id);
 
- public record SolicitarItem(int MaterialId, int Cantidad);
+			var detallesConNombre = new List<object>();
+
+			// Iteramos para buscar los nombres (N+1)
+			foreach (var d in detallesDb)
+			{
+				var material = await _materiales.ObtenerPorIdAsync(d.MaterialId);
+				detallesConNombre.Add(new
+				{
+					d.Id,
+					d.MaterialId,
+					d.CantidadSolicitada,
+					NombreMaterial = material?.NombreMaterial ?? "Material no encontrado"
+				});
+			}
+
+			return Ok(new { s.Id, s.DocenteId, s.EstadoSolicitud, s.FechaSolicitud, Detalles = detallesConNombre });
+		}
+
+		public record SolicitarItem(int MaterialId, int Cantidad);
  public record SolicitarReq(int DocenteId, IEnumerable<SolicitarItem> Items);
 
  // POST: api/Solicitud
