@@ -18,7 +18,7 @@ namespace Infraestructura.Repositorios
             _context = context;
         }
 
-        public async Task<Docente?> ObtenerPorIdAsync(Guid id)
+        public async Task<Docente?> ObtenerPorIdAsync(int id)
         { 
             return await _context.Docentes.FindAsync(id);
         }
@@ -40,7 +40,7 @@ namespace Infraestructura.Repositorios
             await _context.SaveChangesAsync();
         }
 
-        public async Task EliminarAsync(Guid id)
+        public async Task EliminarAsync(int id)
         {
             var docente = await ObtenerPorIdAsync(id);
             if (docente != null)

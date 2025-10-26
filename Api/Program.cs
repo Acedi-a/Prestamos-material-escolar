@@ -1,44 +1,74 @@
-var builder = WebApplication.CreateBuilder(args);
+using Aplication.Mapping;
+using Aplication.UseCases;
+using Dominio.Interfaces;
+using Infraestructura.Data;
+using Infraestructura.Repositorios;
+using Microsoft.EntityFrameworkCore;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+namespace Api
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    public class Program
     {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
 
-app.Run();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                });
+            });
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+            // -----------------------------------------------------------------
+            // 1. AGREGA TODOS TUS SERVICIOS AQUÍ
+            // -----------------------------------------------------------------
+
+
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+                    b => b.MigrationsAssembly("Infraestructura")));
+
+            builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+            builder.Services.AddScoped<IDocenteRepositorio, DocenteRepositorio>();
+            builder.Services.AddScoped<CrearDocente>();
+
+            
+
+            builder.Services.AddControllers();
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
+
+            // -----------------------------------------------------------------
+            // 2. CONSTRUYE LA APLICACIÓN (SOLO UNA VEZ)
+            // -----------------------------------------------------------------
+            var app = builder.Build();
+
+            // -----------------------------------------------------------------
+            // 3. CONFIGURA EL PIPELINE DE HTTP (SOLO CÓDIGO 'app.Use...')
+            // -----------------------------------------------------------------
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            app.UseHttpsRedirection();
+
+            app.UseCors("AllowAll");
+
+            app.UseAuthorization();
+
+            app.MapControllers();
+
+            // -----------------------------------------------------------------
+            // 4. EJECUTA LA APLICACIÓN
+            // -----------------------------------------------------------------
+            app.Run();
+        }
+    }
 }
