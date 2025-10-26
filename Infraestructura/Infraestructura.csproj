@@ -19,9 +19,4 @@
       <ProjectReference Include="..\Dominio\Dominio.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Data\" />
-      <Folder Include="Repositorios\" />
-    </ItemGroup>
-
 </Project>
