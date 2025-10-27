@@ -28,7 +28,19 @@ namespace Api.Controllers
  public async Task<IActionResult> GetAll()
  {
  var list = await _materiales.ListarTodosAsync();
- return Ok(list);
+ var result = list.Select(m => new { m.Id, m.NombreMaterial, m.CategoriaId, m.CantidadTotal, m.CantidadDisponible, m.Estado });
+ return Ok(result);
+ }
+
+ // GET: api/Material/{id}/conteos
+ // Devuelve conteos separados: prestados y enReparacion
+ [HttpGet("{id:int}/conteos")]
+ public async Task<IActionResult> GetPrestadosYEnReparacion(int id)
+ {
+ var m = await _materiales.ObtenerPorIdAsync(id);
+ if (m == null) return NotFound();
+ var (prestados, enReparacion) = await _materiales.ContarPrestadosYEnReparacionPorMaterialAsync(id);
+ return Ok(new { id = m.Id, nombre = m.NombreMaterial, prestados, enReparacion });
  }
 
  // GET: api/Material/{id}

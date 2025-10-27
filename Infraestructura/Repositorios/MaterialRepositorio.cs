@@ -19,5 +19,21 @@ namespace Infraestructura.Repositorios
  var entity = await ObtenerPorIdAsync(id);
  if (entity != null) { _context.Materiales.Remove(entity); await _context.SaveChangesAsync(); }
  }
+
+ // Nuevo helper: devuelve conteos separados de prestados y en reparacion
+ public async Task<(int Prestados, int EnReparacion)> ContarPrestadosYEnReparacionPorMaterialAsync(int materialId)
+ {
+ // Prestados: suma CantidadPrestada de PrestamosDetalle
+ var prestados = await _context.PrestamosDetalle
+ .Where(pd => pd.MaterialId == materialId)
+ .SumAsync(pd => (int?)pd.CantidadPrestada) ??0;
+
+ // En reparacion: suma Cantidad en HistorialReparaciones donde FechaRetorno sea null (aun en reparacion)
+ var enReparacion = await _context.HistorialReparaciones
+ .Where(h => h.MaterialId == materialId && h.FechaRetorno == null)
+ .SumAsync(h => (int?)h.Cantidad) ??0;
+
+ return (prestados, enReparacion);
+ }
  }
 }

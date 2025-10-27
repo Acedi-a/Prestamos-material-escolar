@@ -11,5 +11,7 @@ namespace Dominio.Interfaces
  Task CrearAsync(Material material);
  Task ActualizarAsync(Material material);
  Task EliminarAsync(int id);
+ // Devuelve (prestados, enReparacion) para un material dado
+ Task<(int Prestados, int EnReparacion)> ContarPrestadosYEnReparacionPorMaterialAsync(int materialId);
  }
 }
