@@ -4,6 +4,6 @@ namespace Dominio.Interfaces
 {
  public interface INotificacionServicio
  {
- Task EnviarAsync(int docenteId, string asunto, string mensaje);
- }
+		Task EnviarPorEmailAsync(string emailDestino, string asunto, string mensaje);
+	}
 }

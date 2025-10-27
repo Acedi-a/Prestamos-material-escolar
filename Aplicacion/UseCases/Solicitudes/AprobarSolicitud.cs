@@ -15,6 +15,9 @@ namespace Aplication.UseCases.Solicitudes // ⬅️ Lo ponemos en la carpeta 'So
 		private readonly ISolicitudDetalleRepositorio _solSolicitudDet;
 		private readonly IMaterialRepositorio _materiales;
 		private readonly IMovimientoRepositorio _movimientos;
+		private readonly INotificacionServicio _notifier;
+		private readonly IUsuarioRepositorio _usuarioRepo;
+		private readonly IDocenteRepositorio _docenteRepo;
 
 		public AprobarSolicitud(
 			IPrestamoRepositorio prestamos,
@@ -22,7 +25,9 @@ namespace Aplication.UseCases.Solicitudes // ⬅️ Lo ponemos en la carpeta 'So
 			ISolicitudRepositorio solicitudes,
 			ISolicitudDetalleRepositorio solDetalles,
 			IMaterialRepositorio materiales,
-			IMovimientoRepositorio movimientos)
+			IMovimientoRepositorio movimientos,INotificacionServicio notifier,     
+			IUsuarioRepositorio usuarioRepo,      
+			IDocenteRepositorio docenteRepo)
 		{
 			_prestamos = prestamos;
 			_detalles = detalles;
@@ -30,6 +35,9 @@ namespace Aplication.UseCases.Solicitudes // ⬅️ Lo ponemos en la carpeta 'So
 			_solSolicitudDet = solDetalles;
 			_materiales = materiales;
 			_movimientos = movimientos;
+			_notifier = notifier;              
+			_usuarioRepo = usuarioRepo;           
+			_docenteRepo = docenteRepo;
 		}
 
 		// Ya no necesita 'fechaPrevista', la calculamos
@@ -59,16 +67,45 @@ namespace Aplication.UseCases.Solicitudes // ⬅️ Lo ponemos en la carpeta 'So
 
 			if (detallesSolicitud.Count == 0)
 				throw new System.InvalidOperationException("La solicitud no tiene detalles");
+			var docenteSolicitante = await _docenteRepo.ObtenerPorIdAsync(solicitud.DocenteId);
 
-			// Tu lógica de stock y movimientos (¡perfecta!)
+			
 			foreach (var sd in detallesSolicitud)
 			{
 				var material = await _materiales.ObtenerPorIdAsync(sd.MaterialId)
 					?? throw new System.ArgumentException($"Material {sd.MaterialId} no existe");
 
+
 				if (material.CantidadDisponible < sd.CantidadSolicitada)
 				{
-					// Si no hay stock, rechazamos automáticamente
+					
+					var asunto = $"Material no disponible: {material.NombreMaterial} (Solicitud #{solicitudId})";
+					var mensaje = $"El material '{material.NombreMaterial}' que solicitaste (Solicitud #{solicitudId}) " +
+								  $"no está disponible o el stock es insuficiente " +
+								  $"(Solicitados: {sd.CantidadSolicitada}, Disponibles: {material.CantidadDisponible}, Estado: {material.Estado}). " +
+								  "Tu solicitud ha sido rechazada por este motivo.";
+
+					
+					
+					if (docenteSolicitante != null)
+					{
+						var usuarioDelDocente = await _usuarioRepo.ObtenerPorIdAsync(docenteSolicitante.UsuarioId);
+						if (!string.IsNullOrWhiteSpace(usuarioDelDocente?.Email))
+						{
+							await _notifier.EnviarPorEmailAsync(usuarioDelDocente.Email, asunto, mensaje);
+						}
+						else
+						{
+							Console.WriteLine($"WARN: No se encontró email para notificar al docente {solicitud.DocenteId} (UsuarioId: {docenteSolicitante.UsuarioId})");
+						}
+					}
+					else
+					{
+						Console.WriteLine($"WARN: No se encontró docente {solicitud.DocenteId} para notificar.");
+					}
+					// --- FIN CÓDIGO DE NOTIFICACIÓN ---
+
+					// Código existente para rechazar y lanzar error
 					solicitud.EstadoSolicitud = "Rechazada (Stock Insuficiente)";
 					await _solicitudes.ActualizarAsync(solicitud);
 					throw new System.InvalidOperationException($"Material {material.NombreMaterial} sin stock suficiente. Solicitud rechazada.");
@@ -87,7 +124,31 @@ namespace Aplication.UseCases.Solicitudes // ⬅️ Lo ponemos en la carpeta 'So
 			// Actualizamos el estado de la Solicitud
 			solicitud.EstadoSolicitud = "Aprobada";
 			await _solicitudes.ActualizarAsync(solicitud);
+			try
+			{
+				var asuntoAprobado = $"✅ Solicitud Aprobada #{solicitudId}"; // <-- Puedes usar emojis
+				var mensajeAprobado = $"¡Buenas noticias!\n\n" +
+									  $"Tu solicitud de material (ID: {solicitudId}) ha sido aprobada.\n\n" +
+									  $"Se ha generado un préstamo asociado. La fecha de devolución prevista es el {fechaPrevista.ToString("dd 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs'")}.\n\n" + // <-- Formato de fecha más amigable
+									  "Puedes coordinar el retiro del material con el encargado.\n\n" +
+									  "Saludos,\n" +
+									  "Sistema de Préstamos";
 
+				var usuarioDelDocenteAprob = await _usuarioRepo.ObtenerPorIdAsync(docenteSolicitante.UsuarioId);
+				if (!string.IsNullOrWhiteSpace(usuarioDelDocenteAprob?.Email))
+				{
+					await _notifier.EnviarPorEmailAsync(usuarioDelDocenteAprob.Email, asuntoAprobado, mensajeAprobado);
+				}
+				else
+				{
+					Console.WriteLine($"WARN: No se encontró email para notificar aprobación al docente {solicitud.DocenteId} (UsuarioId: {docenteSolicitante.UsuarioId})");
+				}
+			}
+			catch (Exception exEmail)
+			{
+				// Loggear que la notificación falló pero no detener el proceso principal
+				Console.WriteLine($"ERROR al enviar email de aprobación para Solicitud #{solicitudId}: {exEmail.Message}");
+			}
 			return prestamo.Id;
 		}
 	}
