@@ -9,15 +9,17 @@ namespace Api.Controllers
  public class ReparacionController : ControllerBase
  {
  private readonly RegistrarEnvioAReparacion _registrar;
+ private readonly CompletarReparacion _completar;
  private readonly IHistorialReparacionRepositorio _historial;
  private readonly ConsultarHistorialReparaciones _consultar;
 
- public ReparacionController(RegistrarEnvioAReparacion registrar, IHistorialReparacionRepositorio historial, ConsultarHistorialReparaciones consultar)
+ public ReparacionController(RegistrarEnvioAReparacion registrar, CompletarReparacion completar, IHistorialReparacionRepositorio historial, ConsultarHistorialReparaciones consultar)
  {
- _registrar = registrar; _historial = historial; _consultar = consultar;
+ _registrar = registrar; _completar = completar; _historial = historial; _consultar = consultar;
  }
 
  public record EnviarReq(int MaterialId, DateTime FechaEnvio, string DescripcionFalla, decimal? Costo, int Cantidad);
+ public record CompletarReq(int ReparacionId, DateTime? FechaRetorno);
 
  // POST: api/Reparacion
  [HttpPost]
@@ -34,13 +36,28 @@ namespace Api.Controllers
  }
  }
 
+ // POST: api/Reparacion/completar
+ [HttpPost("completar")]
+ public async Task<IActionResult> Completar([FromBody] CompletarReq req)
+ {
+ try
+ {
+ await _completar.EjecutarAsync(req.ReparacionId, req.FechaRetorno);
+ return Ok(new { message = "Reparación completada" });
+ }
+ catch (Exception ex)
+ {
+ return BadRequest(new { message = ex.Message });
+ }
+ }
+
  // GET: api/Reparacion
  [HttpGet]
- public async Task<IActionResult> GetAll()
+ public async Task<IActionResult> GetAll([FromQuery] int? materialId)
  {
- var reparaciones = await _consultar.EjecutarAsync();
-
- return Ok(reparaciones);
+ var list = await _consultar.EjecutarAsync(materialId);
+ var result = list.Select(h => new { h.Id, h.MaterialId, h.FechaEnvio, h.FechaRetorno, h.DescripcionFalla, h.Costo, h.Cantidad });
+ return Ok(result);
  }
 
  // GET: api/Reparacion/{id}

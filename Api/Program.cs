@@ -81,6 +81,7 @@ namespace Api
             builder.Services.AddScoped<RegistrarEnvioAReparacion>();
             builder.Services.AddScoped<ConsultarDisponibilidadMaterial>();
             builder.Services.AddScoped<ConsultarHistorialReparaciones>();
+            builder.Services.AddScoped<CompletarReparacion>();
             builder.Services.AddScoped<ActualizarMaterial>();
 
 
