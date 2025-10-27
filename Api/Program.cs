@@ -71,7 +71,9 @@ namespace Api
             builder.Services.AddScoped<RegistrarMaterial>();
             builder.Services.AddScoped<SolicitarMaterial>();
             builder.Services.AddScoped<RegistrarPrestamo>();
-            builder.Services.AddScoped<RegistrarDevolucion>();
+			builder.Services.AddScoped<AprobarSolicitud>(); 
+			builder.Services.AddScoped<RechazarSolicitud>();
+			builder.Services.AddScoped<RegistrarDevolucion>();
             builder.Services.AddScoped<ConsultarHistorialMovimientos>();
             builder.Services.AddScoped<GenerarReportePrestamosYDevoluciones>();
             builder.Services.AddScoped<ActualizarEstadoMaterial>();
