@@ -22,12 +22,31 @@ namespace Aplication.UseCases.Reportes
 
  public async Task<(IEnumerable<Prestamo> prestamos, IEnumerable<Devolucion> devoluciones)> EjecutarAsync(int usuarioId, DateTime desde, DateTime hasta)
  {
+ // Validar usuario para evitar violación de FK
+ _ = await _usuarios.ObtenerPorIdAsync(usuarioId) ?? throw new ArgumentException("Usuario no existe");
+
  var prest = (await _prestamos.ListarTodosAsync()).Where(p => p.FechaPrestamo >= desde && p.FechaPrestamo <= hasta).ToList();
  var devol = (await _devoluciones.ListarTodosAsync()).Where(d => d.FechaDevolucion >= desde && d.FechaDevolucion <= hasta).ToList();
 
- var tipo = (await _tipos.ListarTodosAsync()).FirstOrDefault(t => t.NombreReporte == "PrestamosYDevoluciones");
- var tipoId = tipo?.Id ??0;
- await _registros.CrearAsync(new RegistroReporte { TipoReporteId = tipoId, UsuarioId = usuarioId, FechaGeneracion = DateTime.UtcNow, Parametros = $"{{\"desde\":\"{desde:o}\",\"hasta\":\"{hasta:o}\"}}" });
+ var tipos = await _tipos.ListarTodosAsync();
+ var tipo = tipos.FirstOrDefault(t =>
+ string.Equals(t.NombreReporte, "Prestamos y Devoluciones", StringComparison.OrdinalIgnoreCase) ||
+ string.Equals(t.NombreReporte, "PrestamosYDevoluciones", StringComparison.OrdinalIgnoreCase) ||
+ (t.NombreReporte.Contains("prestamo", StringComparison.OrdinalIgnoreCase) && t.NombreReporte.Contains("devolu", StringComparison.OrdinalIgnoreCase))
+ );
+ if (tipo == null)
+ {
+ tipo = new TipoReporte { NombreReporte = "Prestamos y Devoluciones" };
+ await _tipos.CrearAsync(tipo);
+ }
+
+ await _registros.CrearAsync(new RegistroReporte
+ {
+ TipoReporteId = tipo.Id,
+ UsuarioId = usuarioId,
+ FechaGeneracion = DateTime.UtcNow,
+ Parametros = $"{{\"desde\":\"{desde:o}\",\"hasta\":\"{hasta:o}\"}}"
+ });
  return (prest, devol);
  }
  }
