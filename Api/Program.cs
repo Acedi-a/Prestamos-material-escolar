@@ -66,7 +66,6 @@ namespace Api
             builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
             // Use Cases
-            builder.Services.AddScoped<CrearDocente>(); // ejemplo antiguo
             builder.Services.AddScoped<RegistrarDocente>();
             builder.Services.AddScoped<RegistrarMaterial>();
             builder.Services.AddScoped<SolicitarMaterial>();

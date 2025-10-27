@@ -35,7 +35,7 @@ namespace Aplication.UseCases.Devoluciones
  var material = await _materiales.ObtenerPorIdAsync(det.MaterialId) ?? throw new System.ArgumentException($"Material {det.MaterialId} no existe");
  material.CantidadDisponible += det.CantidadPrestada;
  await _materiales.ActualizarAsync(material);
- await _movimientos.CrearAsync(new Movimiento { MaterialId = det.MaterialId, TipoMovimiento = "Entrada", FechaMovimiento = System.DateTime.UtcNow, Cantidad = det.CantidadPrestada, PrestamoId = prestamo.Id });
+ await _movimientos.CrearAsync(new Movimiento { MaterialId = det.MaterialId, TipoMovimiento = "Entrada por Devolucion", FechaMovimiento = System.DateTime.UtcNow, Cantidad = det.CantidadPrestada, PrestamoId = prestamo.Id });
  }
 
  prestamo.EstadoPrestamo = "Devuelto";
