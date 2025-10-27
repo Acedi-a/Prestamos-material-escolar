@@ -126,13 +126,33 @@ namespace Aplication.UseCases.Solicitudes // ⬅️ Lo ponemos en la carpeta 'So
 			await _solicitudes.ActualizarAsync(solicitud);
 			try
 			{
-				var asuntoAprobado = $"✅ Solicitud Aprobada #{solicitudId}"; // <-- Puedes usar emojis
-				var mensajeAprobado = $"¡Buenas noticias!\n\n" +
-									  $"Tu solicitud de material (ID: {solicitudId}) ha sido aprobada.\n\n" +
-									  $"Se ha generado un préstamo asociado. La fecha de devolución prevista es el {fechaPrevista.ToString("dd 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs'")}.\n\n" + // <-- Formato de fecha más amigable
-									  "Puedes coordinar el retiro del material con el encargado.\n\n" +
-									  "Saludos,\n" +
-									  "Sistema de Préstamos";
+				var asuntoAprobado = $"✅ Solicitud Aprobada - ID #{solicitudId}";
+
+				// Construir lista de materiales solicitados
+				var listaMateriales = "";
+				foreach (var sd in detallesSolicitud)
+				{
+					var material = await _materiales.ObtenerPorIdAsync(sd.MaterialId);
+					if (material != null)
+					{
+						listaMateriales += $"- {material.NombreMaterial}: {sd.CantidadSolicitada} unidades\n";
+					}
+				}
+
+				var mensajeAprobado = $"¡Felicitaciones! 🎉\n\n" +
+									  $"Tu solicitud de material (ID: {solicitudId}) ha sido **APROBADA** exitosamente.\n\n" +
+									  $"📅 **Fecha de Solicitud:** {solicitud.FechaSolicitud.ToString("dd/MM/yyyy")}\n" +
+									  $"📦 **Materiales Solicitados:**\n{listaMateriales}\n" +
+									  $"🔄 **Préstamo Generado:** Se ha creado un préstamo asociado con ID {prestamo.Id}.\n" +
+									  $"📅 **Fecha de Devolución Prevista:** {fechaPrevista.ToString("dddd, dd 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs.'")}\n\n" +
+									  $"📍 **Próximos Pasos:**\n" +
+									  $"- Coordina el retiro del material con el encargado del almacén.\n" +
+									  $"- Asegúrate de devolver los materiales en la fecha indicada para evitar penalizaciones.\n\n" +
+									  $"Si tienes alguna duda, no dudes en contactarnos.\n\n" +
+									  $"Atentamente,\n" +
+									  $"Equipo de Gestión de Préstamos\n" +
+									  $"Sistema de Préstamos de Material Escolar\n" +
+									  $"📧 soporte@prestamos.edu.bo | 📞 +591 123-4567";
 
 				var usuarioDelDocenteAprob = await _usuarioRepo.ObtenerPorIdAsync(docenteSolicitante.UsuarioId);
 				if (!string.IsNullOrWhiteSpace(usuarioDelDocenteAprob?.Email))

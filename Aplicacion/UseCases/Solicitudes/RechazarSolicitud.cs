@@ -52,13 +52,21 @@ namespace Aplication.UseCases.Solicitudes
 			{
 				if (docenteSolicitante != null) 
 				{
-					var asuntoRechazo = $"❌ Solicitud Rechazada #{solicitudId}";
+					var asuntoRechazo = $"❌ Solicitud Rechazada - ID #{solicitudId}";
+
 					var mensajeRechazo = $"Hola,\n\n" +
-										 $"Lamentamos informarte que tu solicitud de material (ID: {solicitudId}) ha sido rechazada manualmente por el encargado.\n\n" +
-										 $"Motivo: {motivo}\n\n" + // <-- Incluye el motivo
-										 "Si tienes consultas, por favor contacta al encargado.\n\n" +
-										 "Saludos,\n" +
-										 "Sistema de Préstamos";
+										 $"Lamentamos informarte que tu solicitud de material (ID: {solicitudId}) ha sido **RECHAZADA** por el encargado.\n\n" +
+										 $"📅 **Fecha de Solicitud:** {solicitud.FechaSolicitud.ToString("dd/MM/yyyy")}\n" +
+										 $"📝 **Motivo del Rechazo:** {motivo}\n\n" +
+										 $"💡 **Próximos Pasos Recomendados:**\n" +
+										 $"- Revisa los motivos y ajusta tu solicitud si es necesario.\n" +
+										 $"- Contacta al encargado para más detalles o asistencia.\n" +
+										 $"- Puedes enviar una nueva solicitud una vez resueltos los inconvenientes.\n\n" +
+										 $"Si tienes alguna duda o necesitas ayuda, no dudes en comunicarte con nosotros.\n\n" +
+										 $"Atentamente,\n" +
+										 $"Equipo de Gestión de Préstamos\n" +
+										 $"Sistema de Préstamos de Material Escolar\n" +
+										 $"📧 soporte@prestamos.edu.bo | 📞 +591 123-4567";
 
 					var usuarioDelDocente = await _usuarioRepo.ObtenerPorIdAsync(docenteSolicitante.UsuarioId);
 					if (!string.IsNullOrWhiteSpace(usuarioDelDocente?.Email))
